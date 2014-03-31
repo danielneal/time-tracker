@@ -12,7 +12,7 @@
 (defn start-timer [timer owner]
   (let [stop-chan (chan)]
     (go-loop []
-             (let [[_ c] (alts! [(timeout 100) stop-chan])]
+             (let [[_ c] (alts! [(timeout 500) stop-chan])]
                (when-not (= c stop-chan)
                  (om/update! timer :elapsed
                              (+ (or (:last-elapsed @timer) 0)
@@ -28,27 +28,28 @@
     (om/update! timer :stopped true)
     (om/update! timer :last-elapsed (:elapsed @timer))))
 
+(defn add-timer [timers owner]
+  (om/transact! timers #(conj % {:title "new timer" :elapsed 0 :stopped true})))
+
 (defn timer-view [{:keys [title elapsed stopped] :as timer} owner]
   (reify
     om/IRender
     (render [_]
-            (dom/div #js {:className "timer"}
-                     (dom/span #js {:className "title"} title)
-                     (dom/span #js {:className "elapsed"}
-                               (let [seconds* (/ elapsed 1000)
-                                     minutes* (/ seconds* 60)
-                                     hours (/ minutes* 60)
-                                     millis (- elapsed (* seconds* 1000))
-                                     seconds (- seconds* (* 60 minutes*))
-                                     minutes (- minutes* (* 60 hours))]
-                                 (gstring/format "%02.0f:%02.0f:%02.0f:%04.0f"
+            (dom/div #js {:className "timer pure-g pure-u-1"}
+                     (dom/span #js {:className "title pure-u-3-5"} title)
+                     (dom/span #js {:className "elapsed pure-u-1-5"}
+                               (let [seconds (int (/ elapsed 1000))
+                                     minutes (int (/ seconds 60))
+                                     hours (int (/ minutes 60))
+                                     seconds (- seconds (* 60 minutes))
+                                     minutes (- minutes (* 60 hours))]
+                                 (gstring/format "%02.0f:%02.0f:%02.0f"
                                                  hours
                                                  minutes
-                                                 seconds
-                                                 millis)))
+                                                 seconds)))
                      (if stopped
-                       (dom/button #js {:onClick #(start-timer timer owner)} "Start")
-                       (dom/button #js {:onClick #(stop-timer timer owner)} "Stop"))))))
+                       (dom/button #js {:className "pure-button pure-u-1-5" :onClick #(start-timer timer owner)} "Start")
+                       (dom/button #js {:className "pure-button pure-button-active pure-u-1-5" :onClick #(stop-timer timer owner)} "Stop"))))))
 
 (def app-state (atom {:timers [{:title "internet" :elapsed 0 :stopped true}
                                {:title "everything else" :elapsed 0 :stopped true}]}))
@@ -58,7 +59,10 @@
   (reify
     om/IRender
     (render [_]
-            (apply dom/div nil (om/build-all timer-view timers)))))
+            (dom/div #js {:className "page"}
+                     (apply dom/div #js {:className "pure-g timers"}
+                            (om/build-all timer-view timers))
+                     (dom/button #js {:onClick #(add-timer timers owner) :className "pure-button"} "New timer")))))
 
 
 (om/root timers-view app-state

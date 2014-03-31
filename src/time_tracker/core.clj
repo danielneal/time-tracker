@@ -19,13 +19,11 @@
   (def ch-chsk                       ch-recv)
   (def chsk-send!                    send-fn))
 
-
 (defroutes app
   (GET  "/chsk" req (#'ring-ajax-get-or-ws-handshake req))
   (POST "/chsk" req (#'ring-ajax-post                req))
   (GET "/" req (resp/redirect "/index.html"))
   (route/resources "/" {:root "public"}))
 
-
 (def stop (server/run-server app {:port 3000}))
-(stop)
+;(stop)

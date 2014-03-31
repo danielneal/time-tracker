@@ -1,0 +1,22 @@
+.page {
+    width:500px;
+    margin: auto;
+    margin-top:20px;
+}
+
+.timers {
+
+}
+
+.timer {
+    margin:10px;
+}
+
+.title {
+    font-size: 1.5em;
+    font-weight:bold;
+}
+
+.elapsed {
+    font-size: 1.2em;
+}
